@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     borderColor: "#ccc",
+    backgroundColor: "rgba(54, 45, 213, 1)", // 半透明背景
   },
   container: {
     backgroundColor: "rgb(141, 128, 128)", // 半透明背景
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? 0 : 16, // 为Android设备增加顶部内边距
   },
   header: {
-    backgroundColor: "rgba(54, 45, 213, 0.5)", // 半透明背景
+    backgroundColor: "rgba(54, 45, 213, 1)", // 半透明背景
     paddingTop: 8, // 增加标题的顶部外边距
     paddingBottom: 8, // 增加标题的底部外边距
     textAlign: "center",
