@@ -1,0 +1,78 @@
+name: 🛠 Android CI / Build & Release APK
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: write # allow creating/updating Releases & uploading assets
+  actions: read # allow pulling marketplace actions
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🚀 Cache pub deps
+        uses: actions/cache@v3
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: ☕️ Setup Java (Temurin 17)
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: 🦋 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: 📥 Get dependencies
+        run: flutter pub get
+
+      #- name: ✅ Run tests
+      #  run: flutter test --coverage
+
+      - name: 🏗️ Build APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: 📦 Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp build/app/outputs/flutter-apk/*.apk artifacts/
+
+      - name: ⏰ Get date and run number
+        id: date_run
+        shell: bash
+        run: |
+          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+          echo "number=${{ github.run_number }}" >> $GITHUB_OUTPUT
+          # 修改为符合semver的版本格式：主版本.次版本.修订版本
+          echo "bundle_version=-${{ github.run_number }}" >> $GITHUB_OUTPUT
+          # 获取最近一次提交的信息
+          echo "commit_message=$(git log -1 --pretty=%B | head -n 1)" >> $GITHUB_OUTPUT
+          # 获取短版本的commit SHA
+          echo "commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      # ─────────────── ONLY ON TAGS ───────────────
+      - name: 🏷️ Create or update Release
+        uses: ncipollo/release-action@v1.16.0
+        with:
+          tag: "0.0.1-${{ steps.date_run.outputs.date }}-${{ steps.date_run.outputs.number }}"
+          name: Release 0.0.1-${{ steps.date_run.outputs.date }}-${{ steps.date_run.outputs.number }}
+          artifacts: artifacts/*.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
