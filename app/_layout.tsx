@@ -133,68 +133,6 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isLoginVisible}
-          onRequestClose={() => setIsLoginVisible(false)}
-          // 移除这里的style属性，解决安卓13上的显示问题
-        >
-          <View
-            style={[
-              styles.modalContainer,
-              { position: "absolute", width: "100%", height: "100%" },
-            ]}
-          >
-            {cameraActive ? (
-              <View style={styles.cameraContainer}>
-                <CameraView
-                  style={styles.camera}
-                  facing={"front"}
-                  // onFrame={handleCameraFrame}
-                  // fps={30}
-                />
-
-                {/* 矩形遮罩层 - 使用四块矩形实现镂空效果 */}
-                <View style={styles.maskOuterContainer}>
-                  {/* 上方矩形 */}
-                  <View style={[styles.maskRect, styles.topRect]} />
-
-                  {/* 左侧矩形 */}
-                  <View style={[styles.maskRect, styles.leftRect]} />
-
-                  {/* 右侧矩形 */}
-                  <View style={[styles.maskRect, styles.rightRect]} />
-
-                  {/* 下方矩形 */}
-                  <View style={[styles.maskRect, styles.bottomRect]} />
-
-                  {/* 中间区域边框 */}
-                  <View style={styles.centerBorder} />
-
-                  <ThemedText style={styles.faceHint}>
-                    请将脸部放入方框内
-                  </ThemedText>
-                </View>
-
-                {/* 取消按钮 */}
-                <View style={styles.buttonContainer}>
-                  <Button title="取消" onPress={() => setCameraActive(false)} />
-                  <Button
-                    title="确认"
-                    onPress={handleFaceRecognitionComplete}
-                  />
-                </View>
-              </View>
-            ) : (
-              <View style={styles.modalContent}>
-                <Button title="开始人脸识别" onPress={handleCameraAccess} />
-                <Button title="notify" onPress={handleNotify} />
-              </View>
-            )}
-          </View>
-        </Modal>
       </View>
     </ThemeProvider>
   );
