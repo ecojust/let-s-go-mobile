@@ -70,24 +70,12 @@ export default function HomeScreen() {
       <ThemedView style={styles.container}>
         {selectionData && (
           <ThemedView style={styles.selectionContainer}>
-            <ThemedText style={styles.selectionText}>
-              始发地: {selectionData.origin}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              目的地: {selectionData.destination}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              日期: {selectionData.date}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              座位类型: {selectionData.seatType}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              最低票价: ¥{selectionData.priceMin}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              最高票价: ¥{selectionData.priceMax}
-            </ThemedText>
+            <ThemedText>始发地: {selectionData.origin}</ThemedText>
+            <ThemedText>目的地: {selectionData.destination}</ThemedText>
+            <ThemedText>日期: {selectionData.date}</ThemedText>
+            <ThemedText>座位类型: {selectionData.seatType}</ThemedText>
+            <ThemedText>最低票价: ¥{selectionData.priceMin}</ThemedText>
+            <ThemedText>最高票价: ¥{selectionData.priceMax}</ThemedText>
           </ThemedView>
         )}
         {/* <FlatList

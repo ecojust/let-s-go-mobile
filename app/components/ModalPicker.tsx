@@ -7,9 +7,17 @@ import {
   StyleSheet,
   FlatList,
 } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 
 interface ModalPickerProps {
-  options: { label: string; value: string }[];
+  options: {
+    label: string;
+    value: string;
+    name?: string;
+    code?: string;
+    pinyin?: string;
+  }[];
   selectedValue: string;
   onValueChange: (value: string) => void;
   label: string;
@@ -30,23 +38,26 @@ export default function ModalPicker({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity style={styles.button} onPress={() => setVisible(true)}>
-        <Text style={styles.buttonText}>
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.label}>{label}</ThemedText>
+      <TouchableOpacity
+        style={[styles.button]}
+        onPress={() => setVisible(true)}
+      >
+        <ThemedText style={[styles.buttonText]}>
           {options.find((option) => option.value === selectedValue)?.label ||
             "请选择"}
-        </Text>
+        </ThemedText>
       </TouchableOpacity>
       {visible && (
         <Modal transparent animationType="slide" visible={visible}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+          <ThemedView style={styles.modalContainer}>
+            <ThemedView style={styles.modalContent}>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setVisible(false)}
               >
-                <Text style={styles.closeButtonText}>关闭</Text>
+                <ThemedText style={[styles.closeButtonText]}>关闭</ThemedText>
               </TouchableOpacity>
               <FlatList
                 data={options}
@@ -56,15 +67,17 @@ export default function ModalPicker({
                     style={styles.option}
                     onPress={() => handleSelect(item.value)}
                   >
-                    <Text style={styles.optionText}>{item.label}</Text>
+                    <ThemedText style={styles.optionText}>
+                      {item.label}
+                    </ThemedText>
                   </TouchableOpacity>
                 )}
               />
-            </View>
-          </View>
+            </ThemedView>
+          </ThemedView>
         </Modal>
       )}
-    </View>
+    </ThemedView>
   );
 }
 
@@ -116,6 +129,5 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 16,
-    color: "#FFFFFF",
   },
 });

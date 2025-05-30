@@ -7,17 +7,18 @@ import {
   View,
   Text,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState, useRef } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import ModalPicker from "../components/ModalPicker";
+
+import STATIONS from "../config/station_name";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -131,15 +132,13 @@ export default function ProfileScreen() {
       }
     >
       <ThemedView style={styles.container}>
+        {/* Example usage of themedStyles */}
+        <ThemedText style={[styles.title]}>欢迎，{userInfo.name}</ThemedText>
         {/* 始发地选择框 */}
         <ThemedView style={styles.inputContainer}>
           <ModalPicker
             label="始发地"
-            options={[
-              { label: "1", value: "1" },
-              { label: "2", value: "2" },
-              { label: "3", value: "3" },
-            ]}
+            options={STATIONS}
             selectedValue={origin}
             onValueChange={(value) => {
               setOrigin(value); // Save selection after state update
@@ -151,11 +150,7 @@ export default function ProfileScreen() {
         <ThemedView style={styles.inputContainer}>
           <ModalPicker
             label="目的地"
-            options={[
-              { label: "1", value: "1" },
-              { label: "2", value: "2" },
-              { label: "3", value: "3" },
-            ]}
+            options={STATIONS}
             selectedValue={destination}
             onValueChange={(value) => {
               setDestination(value); // Save selection after state update
@@ -182,7 +177,7 @@ export default function ProfileScreen() {
         {/* 票价区间选择框 */}
         <ThemedView style={styles.inputContainer}>
           <ThemedText style={styles.label}>票价区间</ThemedText>
-          <View style={styles.priceRangeContainer}>
+          <ThemedView style={styles.priceRangeContainer}>
             <TextInput
               style={styles.priceInput}
               placeholder="最低价"
@@ -198,23 +193,23 @@ export default function ProfileScreen() {
               value={priceMax}
               onChangeText={(value) => setPriceMax(value)}
             />
-          </View>
+          </ThemedView>
         </ThemedView>
 
         {/* 日期选择框 */}
         <ThemedView style={styles.inputContainer}>
-          <ThemedText style={styles.label}>日期</ThemedText>
+          <ThemedText style={styles.label}>选择日期</ThemedText>
           <TouchableOpacity
-            onPress={() => setShowDatePicker(true)}
             style={styles.dateButton}
+            onPress={() => setShowDatePicker(true)}
           >
-            <ThemedText style={styles.dateText}>
+            <Text style={styles.dateText}>
               {date.toLocaleDateString("zh-CN", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
               })}
-            </ThemedText>
+            </Text>
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -223,22 +218,13 @@ export default function ProfileScreen() {
               display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={(event, selectedDate) => {
                 setShowDatePicker(false);
-                if (selectedDate) setDate(selectedDate); // Save selection after state update
+                if (selectedDate) {
+                  setDate(selectedDate);
+                }
               }}
-              style={styles.datePicker} // Apply custom styles
             />
           )}
         </ThemedView>
-
-        {/* <ModalDatePicker
-            label="日期"
-            selectedDate={date}
-            onDateChange={(selectedDate) => setDate(selectedDate)}
-          /> */}
-
-        {/* <TouchableOpacity style={styles.confirmButton} onPress={saveSelectionToStorage}>
-          <ThemedText style={styles.confirmButtonText}>保存选择</ThemedText>
-        </TouchableOpacity> */}
       </ThemedView>
     </ParallaxScrollView>
   );
