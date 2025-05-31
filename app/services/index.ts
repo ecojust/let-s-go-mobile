@@ -9,6 +9,8 @@ export const generateSearchTrainsUrl = (params: {
   priceMin: number;
   priceMax: number;
 }) => {
+  console.log("params", params);
+
   Plugin.setConfig(params.priceMin, params.priceMax, params.seatType);
   const fromCode = STATIONS.find((i) => i.name == params.origin)?.code;
   const toCode = STATIONS.find((i) => i.name == params.destination)?.code;

@@ -92,17 +92,14 @@ export default function HomeScreen() {
   const handleSearch = async () => {
     setLoading(true); // Show loading indicator
     setTableData([]);
-
     const url = generateSearchTrainsUrl(selectionData!);
-    console.log(url);
-    // if (url) {
-    setTask("searchList");
-    setFetchUrl(
-      "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=%E4%B8%8A%E6%B5%B7,SHH&ts=%E5%A4%A9%E6%B4%A5,TJP&date=2025-06-11&flag=N,N,Y"
-    );
-    setInjectScript(queryDayListScript);
-    setStartFetch(true);
-    // }
+    console.log("generateSearchTrainsUrl", url);
+    if (url) {
+      setTask("searchList");
+      setFetchUrl(url);
+      setInjectScript(queryDayListScript);
+      setStartFetch(true);
+    }
   };
 
   const handleContentFetched = async (html: string) => {
@@ -168,9 +165,11 @@ export default function HomeScreen() {
         );
         setTask("searchStation");
 
-        console.log("url", url);
+        console.log("generateStationUrl", url);
         setFetchUrl(
-          "https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=5l0000G104B2&from_station_telecode=AOH&to_station_telecode=TIP&depart_date=2025-06-03"
+          url
+          // "https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=5l0000G104B2&from_station_telecode=AOH&to_station_telecode=TIP&depart_date=2025-06-03"
+          // https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=5l0000G104B2&from_station_telecode=AOH&to_station_telecode=TIP&depart_date=2025年6月1日
         );
         setInjectScript(queryStationScript);
         setStartFetch(true);
@@ -182,7 +181,7 @@ export default function HomeScreen() {
     {
       key: "trainNo",
       label: "车次",
-      width: 60,
+      width: 65,
       useButton: true,
       action: "more",
     },
@@ -339,19 +338,22 @@ export default function HomeScreen() {
         onRequestClose={() => setStationsDialogVisible(false)}
       >
         <ThemedView style={styles.stationsDialogContainer}>
-          <ThemedView style={styles.stationsDialogContent}>
-            <ThemedText style={styles.dialogTitle}>
+          <ThemedView style={styles.timeLineContent}>
+            <ThemedText style={styles.dialogTitle2}>
               {selectionData?.date}|{dialogContent?.trainNo}车站信息
             </ThemedText>
-            <FlatList
-              data={stations}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <ThemedText style={styles.stationItem}>
-                  {item.station_name} ({item.arrive_time} - {item.start_time})
-                </ThemedText>
-              )}
-            />
+
+            <ThemedView style={styles.timeLine}>
+              <FlatList
+                data={stations}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <ThemedText style={styles.stationItem}>
+                    {item.station_name} ({item.arrive_time} - {item.start_time})
+                  </ThemedText>
+                )}
+              />
+            </ThemedView>
             <Button
               title="关闭"
               onPress={() => setStationsDialogVisible(false)}
@@ -455,13 +457,45 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   stationsDialogContent: {
-    width: "90%",
-    height: "80%",
-    padding: 0,
+    // width: "90%",
+    // minWidth: 300,
+    // height: "80%",
+    // padding: 10,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#ff0000",
     alignItems: "center",
   },
+  dialogTitle2: {
+    fontSize: 18,
+    alignItems: "center",
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "red",
+    backgroundColor: "#fff000",
+  },
+  dialogText2: {
+    fontSize: 16,
+    marginBottom: 5,
+    padding: 5,
+  },
+  timeLineContent: {
+    minWidth: 300,
+    height: "80%",
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#fff000",
+    alignItems: "center",
+  },
+  timeLine: {
+    flex: 1,
+    alignItems: "flex-start",
+    // backgroundColor: "transparent",
+    backgroundColor: "red",
+    width: 400,
+
+    height: "80%",
+  },
+
   stationItem: {
     fontSize: 16,
     marginBottom: 10,

@@ -35,11 +35,11 @@ export default function ProfileScreen() {
   };
 
   // 配置选项状态
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+  const [origin, setOrigin] = useState("上海");
+  const [destination, setDestination] = useState("南京");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [seatType, setSeatType] = useState("");
+  const [seatType, setSeatType] = useState("二等座");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
 
@@ -50,11 +50,7 @@ export default function ProfileScreen() {
       seatType,
       priceMin,
       priceMax,
-      date: date.toLocaleDateString("zh-CN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
+      date: date.toISOString().split("T")[0], // Format date as YYYY-MM-DD
     };
     try {
       await AsyncStorage.setItem("selectionData", JSON.stringify(selection));
@@ -75,12 +71,14 @@ export default function ProfileScreen() {
         const data = await AsyncStorage.getItem("selectionData");
         if (data) {
           const parsedData = JSON.parse(data);
-          setOrigin(parsedData.origin || "");
-          setDestination(parsedData.destination || "");
-          setSeatType(parsedData.seatType || "");
+          setOrigin(parsedData.origin || "上海");
+          setDestination(parsedData.destination || "南京");
+          setSeatType(parsedData.seatType || "二等座");
           setPriceMin(parsedData.priceMin || 0);
           setPriceMax(parsedData.priceMax || 350);
-          //setDate(new Date(parsedData.date || new Date()));
+          setDate(
+            new Date(parsedData.date || new Date().getTime() + 1000 * 60 * 24)
+          ); // Parse date from YYYY-MM-DD format
         }
       } catch (error) {
         console.error("恢复选择失败", error);
@@ -204,11 +202,8 @@ export default function ProfileScreen() {
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={styles.dateText}>
-              {date.toLocaleDateString("zh-CN", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {date.toISOString().split("T")[0]}{" "}
+              {/* Display date as YYYY-MM-DD */}
             </Text>
           </TouchableOpacity>
           {showDatePicker && (
