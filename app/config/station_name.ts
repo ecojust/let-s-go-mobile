@@ -11,7 +11,7 @@ let STATIONS = station_names.split("|||").map((item) => {
     code: items[2],
     pinyin: items[3],
     label: `${items[1]}(${items[2]})`,
-    value: items[2],
+    value: items[1],
   };
 });
 

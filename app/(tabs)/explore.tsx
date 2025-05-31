@@ -17,29 +17,22 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import ModalPicker from "../components/ModalPicker";
+import { ThemedTextInput } from "@/components/ThemedTextInput";
 
 import STATIONS from "../config/station_name";
+import { SITE_TYPE } from "../config/const";
+import { productName } from "expo-device";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
 
   // 用户信息
-  const userInfo = {
-    name: "张三",
-    avatar: require("@/assets/images/logo.png"), // 使用现有图片作为示例头像
+  const productInfo = {
+    nameZh: "上车，走吧",
+    nameEn: "Let's Go",
+    logo: require("@/assets/images/logo.png"), // 使用现有图片作为示例头像
     // 可以添加更多用户信息
   };
-
-  // 设置选项列表
-  const settingOptions = [
-    { id: "1", title: "个人资料", icon: "person.fill" },
-    { id: "2", title: "账号安全", icon: "lock.fill" },
-    { id: "3", title: "通知设置", icon: "bell.fill" },
-    { id: "4", title: "隐私设置", icon: "hand.raised.fill" },
-    { id: "5", title: "主题设置", icon: "paintbrush.fill" },
-    { id: "6", title: "关于我们", icon: "info.circle.fill" },
-    { id: "7", title: "退出登录", icon: "arrow.right.square.fill" },
-  ];
 
   // 配置选项状态
   const [origin, setOrigin] = useState("");
@@ -85,8 +78,8 @@ export default function ProfileScreen() {
           setOrigin(parsedData.origin || "");
           setDestination(parsedData.destination || "");
           setSeatType(parsedData.seatType || "");
-          setPriceMin(parsedData.priceMin || "");
-          setPriceMax(parsedData.priceMax || "");
+          setPriceMin(parsedData.priceMin || 0);
+          setPriceMax(parsedData.priceMax || 350);
           //setDate(new Date(parsedData.date || new Date()));
         }
       } catch (error) {
@@ -124,19 +117,24 @@ export default function ProfileScreen() {
 
   return (
     <ParallaxScrollView
+      headerHeight={180}
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
       headerImage={
         <ThemedView style={styles.headerImageContainer}>
-          <Image source={userInfo.avatar} style={styles.avatarImage} />
+          <Image source={productInfo.logo} style={styles.avatarImage} />
         </ThemedView>
       }
     >
       <ThemedView style={styles.container}>
         {/* Example usage of themedStyles */}
-        <ThemedText style={[styles.title]}>欢迎，{userInfo.name}</ThemedText>
+        <ThemedText style={[styles.title]}>{productInfo.nameZh}</ThemedText>
+        <ThemedText style={[styles.subTitle]}>{productInfo.nameEn}</ThemedText>
+
         {/* 始发地选择框 */}
         <ThemedView style={styles.inputContainer}>
           <ModalPicker
+            showSearch
+            autoClose
             label="始发地"
             options={STATIONS}
             selectedValue={origin}
@@ -149,6 +147,8 @@ export default function ProfileScreen() {
         {/* 目的地选择框 */}
         <ThemedView style={styles.inputContainer}>
           <ModalPicker
+            showSearch
+            autoClose
             label="目的地"
             options={STATIONS}
             selectedValue={destination}
@@ -162,11 +162,7 @@ export default function ProfileScreen() {
         <ThemedView style={styles.inputContainer}>
           <ModalPicker
             label="座位类型"
-            options={[
-              { label: "经济舱", value: "economy" },
-              { label: "商务舱", value: "business" },
-              { label: "头等舱", value: "first" },
-            ]}
+            options={SITE_TYPE}
             selectedValue={seatType}
             onValueChange={(value) => {
               setSeatType(value); // Save selection after state update
@@ -178,15 +174,19 @@ export default function ProfileScreen() {
         <ThemedView style={styles.inputContainer}>
           <ThemedText style={styles.label}>票价区间</ThemedText>
           <ThemedView style={styles.priceRangeContainer}>
-            <TextInput
+            <ThemedTextInput
+              width="45%"
+              prefix="¥"
               style={styles.priceInput}
               placeholder="最低价"
               keyboardType="numeric"
               value={priceMin}
               onChangeText={(value) => setPriceMin(value)}
             />
-            <Text style={styles.priceSeparator}>-</Text>
-            <TextInput
+            <ThemedText style={styles.priceSeparator}>—</ThemedText>
+            <ThemedTextInput
+              width="45%"
+              prefix="¥"
               style={styles.priceInput}
               placeholder="最高价"
               keyboardType="numeric"
@@ -236,6 +236,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     height: "100%",
+    paddingTop: 28,
     backgroundColor: "rgba(255, 0, 221, 0.2)", // 内容区域背景色
   },
   avatarImage: {
@@ -301,16 +302,26 @@ const styles = StyleSheet.create({
     color: "#808080",
   },
   container: {
+    // backgroundColor: "red",
     flex: 1,
-    padding: 16,
+    padding: 0,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: "normal",
+    // marginBottom: 20,
+    textAlign: "center",
+    opacity: 0.2,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 10,
+    // backgroundColor: "blue",
   },
   label: {
     fontSize: 16,
@@ -361,18 +372,18 @@ const styles = StyleSheet.create({
   priceRangeContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 10,
   },
   priceInput: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    borderRadius: 5,
-    backgroundColor: "#FFFFFF",
+    // flex: 1,
+    // padding: 10,
+    // borderWidth: 1,
+    // borderColor: "#CCCCCC",
+    // borderRadius: 5,
+    // backgroundColor: "#FFFFFF",
   },
   priceSeparator: {
     fontSize: 16,
-    color: "#ffffff",
   },
 });

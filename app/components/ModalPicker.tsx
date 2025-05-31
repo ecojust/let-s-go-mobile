@@ -6,9 +6,12 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  TextInput,
 } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { ThemedTextInput } from "@/components/ThemedTextInput";
+import { Ionicons } from "@expo/vector-icons";
 
 interface ModalPickerProps {
   options: {
@@ -21,6 +24,9 @@ interface ModalPickerProps {
   selectedValue: string;
   onValueChange: (value: string) => void;
   label: string;
+  placeholder?: string;
+  showSearch?: boolean;
+  autoClose?: boolean;
 }
 
 export default function ModalPicker({
@@ -28,13 +34,21 @@ export default function ModalPicker({
   selectedValue,
   onValueChange,
   label,
+  placeholder = "查询...",
+  showSearch = false,
+  autoClose = false,
 }: ModalPickerProps) {
   const [visible, setVisible] = useState(false);
+  const [filterText, setFilterText] = useState("");
+
+  const filteredOptions = options.filter((option) =>
+    option.label.includes(filterText)
+  );
 
   const handleSelect = (value: string) => {
     console.log("handleSelect", value);
     onValueChange(value);
-    setVisible(false);
+    autoClose && setVisible(false);
   };
 
   return (
@@ -50,17 +64,28 @@ export default function ModalPicker({
         </ThemedText>
       </TouchableOpacity>
       {visible && (
-        <Modal transparent animationType="slide" visible={visible}>
-          <ThemedView style={styles.modalContainer}>
+        <Modal
+          transparent
+          animationType="slide"
+          visible={visible}
+          onRequestClose={() => setVisible(false)} // Handle back button press on Android
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setVisible(false)} // Close modal when clicking on the mask
+          >
             <ThemedView style={styles.modalContent}>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setVisible(false)}
-              >
-                <ThemedText style={[styles.closeButtonText]}>关闭</ThemedText>
-              </TouchableOpacity>
+              {showSearch && (
+                <ThemedTextInput
+                  style={styles.filterInput}
+                  placeholder={placeholder}
+                  value={filterText}
+                  onChangeText={setFilterText}
+                />
+              )}
               <FlatList
-                data={options}
+                data={filteredOptions}
                 keyExtractor={(item) => item.value}
                 renderItem={({ item }) => (
                   <TouchableOpacity
@@ -70,11 +95,19 @@ export default function ModalPicker({
                     <ThemedText style={styles.optionText}>
                       {item.label}
                     </ThemedText>
+                    {item.value === selectedValue && (
+                      <Ionicons
+                        name="checkmark"
+                        size={20}
+                        color="#4CAF50"
+                        style={styles.checkIcon}
+                      />
+                    )}
                   </TouchableOpacity>
                 )}
               />
             </ThemedView>
-          </ThemedView>
+          </TouchableOpacity>
         </Modal>
       )}
     </ThemedView>
@@ -83,12 +116,11 @@ export default function ModalPicker({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
+    marginBottom: 0,
   },
   label: {
     fontSize: 16,
     marginBottom: 10,
-    color: "#FFFFFF", // Ensure the label text is visible
   },
   button: {
     padding: 10,
@@ -113,6 +145,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10, // Rounded corners for the top
   },
   option: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between", // Ensure the icon floats to the right
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#EEEEEE",
@@ -129,5 +164,21 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)", // Semi-transparent background
+    justifyContent: "flex-end", // Align modal content to the bottom
+  },
+  filterInput: {
+    // marginBottom: 10,
+    // padding: 30,
+    // borderWidth: 1,
+    // borderColor: "#CCCCCC",
+    // borderRadius: 5,
+    // backgroundColor: "#FFFFFF",
+  },
+  checkIcon: {
+    marginLeft: "auto", // Float the icon to the right
   },
 });
