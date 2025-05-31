@@ -26,3 +26,18 @@ export const parseList = async (url: string) => {
   const arr = await Plugin.parseDayLeftTicket(url);
   return arr;
 };
+
+export const generateStationUrl = (
+  train_no: string,
+  fromCode: string,
+  toCode: string,
+  date: string
+) => {
+  const url = `https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=${train_no}&from_station_telecode=${fromCode}&to_station_telecode=${toCode}&depart_date=${date}`;
+  return url;
+};
+
+export const parseStations = async (html: string) => {
+  const arr = await Plugin.getStations(html);
+  return arr;
+};

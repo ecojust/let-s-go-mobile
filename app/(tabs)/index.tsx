@@ -8,10 +8,12 @@ import {
   Modal,
   View,
   Button,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -22,17 +24,26 @@ import { ThemedButton } from "@/components/ThemedButton";
 
 import { WebViewFetcher } from "../services/webviewFetcher";
 
-import { queryDayListScript } from "../config/script";
+import { queryDayListScript, queryStationScript } from "../config/script";
 
-import { parseList, generateSearchTrainsUrl } from "../services";
+import {
+  parseList,
+  generateSearchTrainsUrl,
+  generateStationUrl,
+  parseStations,
+} from "../services";
 
 export default function HomeScreen() {
   const [content, setContent] = useState("");
   const [fetchUrl, setFetchUrl] = useState("");
   const [startFetch, setStartFetch] = useState(false);
   const [injectScript, setInjectScript] = useState("");
+  const [loading, setLoading] = useState(false); // Add loading state
+  const [stationsDialogVisible, setStationsDialogVisible] = useState(false); // State for stations dialog
+  const [stations, setStations] = useState<any[]>([]); // State for stations data
 
   const [tableData, setTableData] = useState([]);
+  const [task, setTask] = useState("searchList");
 
   const [selectionData, setSelectionData] = useState<{
     origin: string;
@@ -79,9 +90,13 @@ export default function HomeScreen() {
   }, []);
 
   const handleSearch = async () => {
+    setLoading(true); // Show loading indicator
+    setTableData([]);
+
     const url = generateSearchTrainsUrl(selectionData!);
     console.log(url);
     // if (url) {
+    setTask("searchList");
     setFetchUrl(
       "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=%E4%B8%8A%E6%B5%B7,SHH&ts=%E5%A4%A9%E6%B4%A5,TJP&date=2025-06-11&flag=N,N,Y"
     );
@@ -91,36 +106,74 @@ export default function HomeScreen() {
   };
 
   const handleContentFetched = async (html: string) => {
-    setContent(html);
-    setStartFetch(false);
-    const list = await parseList(html!);
-    setTableData(list as never[]);
-    // trainNo: no,
-    // from: from_to.eq(0).text(),
-    // to: from_to.eq(1).text(),
-    // departureTime: start_end.eq(0).text(),
-    // arrivalTime: start_end.eq(1).text(),
-    // duration: ls.eq(0).text(),
-    // tickets: tickets,
-    // raw_data: {
-    //   train_no: format_raw_data[1],
-    //   from_station_telecode: format_raw_data[2],
-    //   to_station_telecode: format_raw_data[3],
-    // },
-    // priceCode: yp_info_new,
-    // bedCode: bed_level_info,
-    // seats: seats,
-    // seatsStr: seats.toString(),
+    switch (task) {
+      case "searchList":
+        setContent(html);
+        setStartFetch(false);
+        const list = await parseList(html!);
+        setTableData(list as never[]);
+        setLoading(false); // Hide loading indicator after setting fetch state
+        break;
+
+      case "searchStation":
+        setContent(html);
+        const fetchedStations = await parseStations(html);
+        setStations(fetchedStations); // Set stations data
+        setStationsDialogVisible(true); // Show stations dialog
+        setStartFetch(false);
+        setLoading(false); // Hide loading indicator
+
+        setTimeout(() => {
+          setTask("searchTimeLine");
+
+          // await Plugin.searchTickets(
+          //   currentTrain.value.trainNo,
+          //   stations.value,
+          //   form.from,
+          //   form.date,
+          //   (data) => {
+          //     tickets.value[data.to] = {
+          //       message: `车次【${data.trainNo}】从${data.from}到${data.to}的余票查询结束`,
+          //       tickets: data.tickets,
+          //     };
+          //   }
+          // );
+        }, 1000);
+        break;
+      case "searchTimeLine":
+        break;
+    }
   };
 
-  const handleItemClick = (row: any, action: string) => {
+  const handleItemClick = async (row: any, action: string) => {
     console.log(action, row);
+    setDialogContent(row);
     switch (action) {
       case "more":
-        setDialogContent(row);
         setDialogVisible(true);
         break;
       case "fetchAllTickets":
+        if (
+          !row.raw_data.train_no ||
+          !row.raw_data.from_station_telecode ||
+          !row.raw_data.to_station_telecode
+        ) {
+          return;
+        }
+        const url = generateStationUrl(
+          row.raw_data.train_no,
+          row.raw_data.from_station_telecode,
+          row.raw_data.to_station_telecode,
+          selectionData?.date!
+        );
+        setTask("searchStation");
+
+        console.log("url", url);
+        setFetchUrl(
+          "https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=5l0000G104B2&from_station_telecode=AOH&to_station_telecode=TIP&depart_date=2025-06-03"
+        );
+        setInjectScript(queryStationScript);
+        setStartFetch(true);
         break;
     }
   };
@@ -209,6 +262,22 @@ export default function HomeScreen() {
         style={styles.searchButton}
       />
 
+      {loading && (
+        <ThemedView>
+          <ActivityIndicator size="large" color="#4466ff" />
+        </ThemedView>
+      )}
+
+      {/* <ThemedText style={styles.selectionText}>{content}</ThemedText> */}
+      {startFetch && (
+        <WebViewFetcher
+          injectedScript={injectScript}
+          height={100}
+          url={fetchUrl}
+          onContentFetched={handleContentFetched}
+        />
+      )}
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemedView style={styles.container}>
           {/* 使用 ThemedTable 组件 */}
@@ -218,15 +287,6 @@ export default function HomeScreen() {
             columns={tableColumns}
             onPress={handleItemClick}
           />
-          {/* <ThemedText style={styles.selectionText}>{content}</ThemedText> */}
-          {startFetch && (
-            <WebViewFetcher
-              injectedScript={injectScript}
-              height={200}
-              url={fetchUrl}
-              onContentFetched={handleContentFetched}
-            />
-          )}
         </ThemedView>
       </ScrollView>
 
@@ -241,7 +301,7 @@ export default function HomeScreen() {
           <ThemedView style={styles.dialogContent}>
             <ThemedText style={styles.dialogTitle}>详细信息</ThemedText>
             {dialogContent && (
-              <ThemedView>
+              <ThemedView style={{}}>
                 <ThemedText style={styles.selectionText}>
                   车次: {dialogContent.trainNo}
                 </ThemedText>
@@ -267,6 +327,35 @@ export default function HomeScreen() {
               </ThemedView>
             )}
             <Button title="关闭" onPress={() => setDialogVisible(false)} />
+          </ThemedView>
+        </ThemedView>
+      </Modal>
+
+      {/* Stations Dialog */}
+      <Modal
+        visible={stationsDialogVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setStationsDialogVisible(false)}
+      >
+        <ThemedView style={styles.stationsDialogContainer}>
+          <ThemedView style={styles.stationsDialogContent}>
+            <ThemedText style={styles.dialogTitle}>
+              {selectionData?.date}|{dialogContent?.trainNo}车站信息
+            </ThemedText>
+            <FlatList
+              data={stations}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <ThemedText style={styles.stationItem}>
+                  {item.station_name} ({item.arrive_time} - {item.start_time})
+                </ThemedText>
+              )}
+            />
+            <Button
+              title="关闭"
+              onPress={() => setStationsDialogVisible(false)}
+            />
           </ThemedView>
         </ThemedView>
       </Modal>
@@ -311,7 +400,8 @@ const styles = StyleSheet.create({
     padding: 10,
     gap: 2,
     borderRadius: 4,
-    boxShadow: "0 0 10px 2px rgb(197, 87, 9) inset",
+    // boxShadow: "0 0 10px 2px rgba(197, 87, 9, 0.32) inset",
+    boxShadow: "rgba(50, 50, 93, 0.25) 0px 0px 6px 2px inset",
   },
 
   selectionRow: {
@@ -331,17 +421,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    // width: 400,
+
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   dialogContent: {
     // width: "40%", // Set dialog width to 80%
-    padding: 20,
+    minWidth: 300,
+    padding: 10,
     // paddingBottom: 10,
-    margin: 20,
+    margin: 10,
     borderRadius: 10,
     alignItems: "center",
-    // backgroundColor: "rgba(0, 0, 0, 1)",
-    boxShadow: " 0px 0px 3px 3px rgba(255, 255, 255, 0.24)",
+    // backgroundColor: "rgb(207, 20, 20)",
+    boxShadow: " 0px 0px 3px 3px rgba(255, 255, 255, 0.14)",
   },
   dialogTitle: {
     fontSize: 18,
@@ -354,5 +447,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
     padding: 5,
+  },
+  stationsDialogContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  stationsDialogContent: {
+    width: "90%",
+    height: "80%",
+    padding: 0,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    alignItems: "center",
+  },
+  stationItem: {
+    fontSize: 16,
+    marginBottom: 10,
   },
 });

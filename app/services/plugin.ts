@@ -289,18 +289,7 @@ export default class Plugin {
     return afterSort;
   }
 
-  static async getStations(
-    train_no: string,
-    fromCode: string,
-    toCode: string,
-    date: string
-  ) {
-    const url = `https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=${train_no}&from_station_telecode=${fromCode}&to_station_telecode=${toCode}&depart_date=${date}`;
-
-    // const res = await fetch(url);
-    // const html = await res.text();
-    const html = "";
-
+  static async getStations(html: string) {
     const $ = cheerio.load(html);
     const response = $("pre").eq(0).text();
     const json = JSON.parse(response);

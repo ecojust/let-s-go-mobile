@@ -99,6 +99,10 @@ export function ThemedTable({ data, columns, onPress }: ThemedTableProps) {
                 ]}
               >
                 <ThemedButton
+                  disabled={
+                    column.key == "operation" &&
+                    (row.seatsStr as string[]).length == 0
+                  }
                   size="small"
                   title={row[column.key] as string}
                   onPress={() => onPress && onPress(row, column.action!)} // Ensure onPress is defined
@@ -153,6 +157,8 @@ const styles = StyleSheet.create({
     display: "flex", // Ensure flexbox layout
     // backgroundColor: "red",
     // backgroundColor: "#F0F0F0",
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   bodyCell: {
     fontSize: 16,

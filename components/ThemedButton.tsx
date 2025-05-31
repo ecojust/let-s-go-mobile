@@ -9,6 +9,7 @@ interface ThemedButtonProps {
   lightColor?: string;
   darkColor?: string;
   size?: "small" | "default" | "large";
+  disabled?: boolean;
 }
 
 export function ThemedButton({
@@ -18,6 +19,7 @@ export function ThemedButton({
   lightColor,
   darkColor,
   size = "default",
+  disabled = false,
 }: ThemedButtonProps) {
   const backgroundColor = useThemeColor(
     { light: lightColor || "#4466ff", dark: darkColor || "#ffffff" },
@@ -28,22 +30,31 @@ export function ThemedButton({
     "text"
   );
 
+  const disableBackgroundColor = useThemeColor(
+    { light: lightColor || "#cccccc", dark: darkColor || "#cccccc" },
+    "background"
+  );
+  const disableTextColor = useThemeColor(
+    { light: "rgba(0,0,0,0.3)", dark: "rgba(0,0,0,0.3)" },
+    "text"
+  );
+
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        { backgroundColor },
-        // size === "default" ? styles.default : undefined,
-        // size === "small" ? styles.small : undefined,
-        // size === "large" ? styles.large : undefined,
+        {
+          backgroundColor: disabled ? disableBackgroundColor : backgroundColor,
+        },
         style,
       ]}
       onPress={onPress}
+      disabled={disabled}
     >
       <Text
         style={[
           styles.buttonText,
-          { color: textColor },
+          { color: disabled ? disableTextColor : textColor },
           size === "default" ? styles.default : undefined,
           size === "small" ? styles.small : undefined,
           size === "large" ? styles.large : undefined,
@@ -74,8 +85,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   default: {
-    padding: 8,
-    fontSize: 16,
+    padding: 12,
+    fontSize: 18,
   },
   large: {
     padding: 10,

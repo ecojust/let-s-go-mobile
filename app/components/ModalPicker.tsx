@@ -49,7 +49,6 @@ export default function ModalPicker({
   );
 
   const handleSelect = (value: string) => {
-    console.log("handleSelect", value);
     onValueChange(value);
     autoClose && setVisible(false);
   };
