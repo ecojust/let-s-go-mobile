@@ -23,8 +23,6 @@ export type ThemedTextInputProps = TextInputProps & {
 
 export function ThemedTextInput({
   style,
-  lightColor,
-  darkColor,
   value,
   onChangeText,
   clearable = false,
@@ -32,13 +30,9 @@ export function ThemedTextInput({
   prefix,
   ...rest
 }: ThemedTextInputProps) {
-  const color = useThemeColor(
-    { light: lightColor || "black", dark: darkColor || "white" },
-    "text"
-  );
-
+  const color = useThemeColor({ light: "black", dark: "black" }, "text");
   const iconColor = useThemeColor(
-    { light: lightColor || "#dbdbdb", dark: darkColor || "#dbdbdb" },
+    { light: "#dbdbdb", dark: "#dbdbdb" },
     "text"
   );
 

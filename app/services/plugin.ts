@@ -23,7 +23,6 @@ export default class Plugin {
   }
 
   static decodePrice(type1Code: string, type2Code: string) {
-    console.log("decodePrice", type1Code, type2Code);
     const results = [];
 
     // 情况1：动车解析规则 - 两种code都有，并且都是字母开头
@@ -150,14 +149,12 @@ export default class Plugin {
     results.forEach((item) => {
       item.typeCode = `${
         TYPE_CODE_MAPPING[item.typeCode as keyof typeof TYPE_CODE_MAPPING]
-      }(${item.typeCode})`;
+      }`;
     });
 
     const afterFilter = results.filter((res) =>
       res.typeCode.includes(this.seatType)
     );
-
-    console.log(afterFilter);
 
     return afterFilter;
   }
@@ -165,16 +162,14 @@ export default class Plugin {
   static generateSearchTrainsUrl() {}
 
   static async parseDayLeftTicket(html: string) {
-    // console.log(html);
-    // 解析json
     const $ = cheerio.load(html);
     const arr: Array<any> = [];
+
+    let priceMin = 0;
+    let priceMax = 0;
+
     //@ts-ignore
     $("tr").each((i, el) => {
-      const eee = $(el).text(); //车次
-
-      // console.log(eee);
-
       const no = $(el).find(".number").text(); //车次
 
       if (no !== "") {
@@ -195,7 +190,6 @@ export default class Plugin {
           raw_data
             .match(/'([^']+)'/g)
             ?.map((param: string) => param.replace(/'/g, "")) || [];
-        // console.log("raw_data", raw_data, format_raw_data);
 
         let tickets: Array<any> = [];
         tickets = tickets.concat(
@@ -230,8 +224,26 @@ export default class Plugin {
           yp_info_new as string
         );
 
-        const seatsStr = seats.map(
-          (seat) => `${seat.typeCode}: ¥${seat.price} (${seat.status})`
+        const seatsStr = seats.map((seat) => `¥${seat.price}`);
+
+        const prices = seats.filter((p) => p).map((s) => parseFloat(s.price));
+        if (prices.length > 0) {
+          priceMin == 0
+            ? (priceMin = Math.min(...prices))
+            : (priceMin = Math.min(...prices, priceMin));
+          priceMax == 0
+            ? (priceMax = Math.max(...prices))
+            : (priceMax = Math.max(...prices, priceMax));
+        }
+
+        const afterTicketFilter = tickets.filter((res) =>
+          res.label.includes(this.seatType)
+        );
+
+        const ticketsStr = afterTicketFilter.map((ticket) => `${ticket.text}`);
+
+        const ticketsDetailStr = afterTicketFilter.map(
+          (ticket) => `${ticket.label}`
         );
 
         arr.push({
@@ -242,6 +254,8 @@ export default class Plugin {
           arrivalTime: start_end.eq(1).text(),
           duration: ls.eq(0).text(),
           tickets: tickets,
+          ticketsStr: ticketsStr,
+          ticketsDetailStr: ticketsDetailStr,
           raw_data: {
             train_no: format_raw_data[1],
             from_station_telecode: format_raw_data[2],
@@ -249,13 +263,30 @@ export default class Plugin {
           },
           priceCode: yp_info_new,
           bedCode: bed_level_info,
+          price: prices[0] || 0,
           seats: seats,
           seatsStr: seatsStr, // Updated to use readable format
+          operation: "查沿途",
         });
       }
     });
 
-    return arr;
+    const afterSort = arr.map((d) => {
+      return Object.assign(d, {
+        priceRate:
+          d.price == 0
+            ? 0
+            : parseFloat(
+                (
+                  (d.price - priceMin) / (priceMax - priceMin) || 0.01
+                ).toPrecision(3)
+              ),
+      });
+    });
+
+    // console.log("afterSort", afterSort);
+
+    return afterSort;
   }
 
   static async getStations(
@@ -284,7 +315,6 @@ export default class Plugin {
     callback: Function
   ) {
     const from = STATIONS.find((item) => item.code === fromCode)?.name;
-    console.log("from", from);
     let startIndex = stations.findIndex((item: any) => {
       return item.station_name === from;
     });
@@ -301,8 +331,6 @@ export default class Plugin {
       const to = item.station_name;
       const toCode = STATIONS.find((item) => item.name === to)?.code;
       // ElMessage.info(`开始查询 ${from} 到 ${to} 的车次`);
-
-      console.log(`开始查询 ${from} 到 ${to} 的车次`);
 
       const url = `https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=${from},${fromCode}&ts=${to},${toCode}&date=${date}&flag=N,N,Y`;
 

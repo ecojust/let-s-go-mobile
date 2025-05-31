@@ -12,6 +12,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedTextInput } from "@/components/ThemedTextInput";
 import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface ModalPickerProps {
   options: {
@@ -41,6 +42,8 @@ export default function ModalPicker({
   const [visible, setVisible] = useState(false);
   const [filterText, setFilterText] = useState("");
 
+  const color = useThemeColor({ light: "black", dark: "black" }, "text");
+
   const filteredOptions = options.filter((option) =>
     option.label.includes(filterText)
   );
@@ -58,7 +61,14 @@ export default function ModalPicker({
         style={[styles.button]}
         onPress={() => setVisible(true)}
       >
-        <ThemedText style={[styles.buttonText]}>
+        <ThemedText
+          style={[
+            styles.buttonText,
+            {
+              color,
+            },
+          ]}
+        >
           {options.find((option) => option.value === selectedValue)?.label ||
             "请选择"}
         </ThemedText>
@@ -80,6 +90,7 @@ export default function ModalPicker({
                 <ThemedTextInput
                   style={styles.filterInput}
                   placeholder={placeholder}
+                  clearable
                   value={filterText}
                   onChangeText={setFilterText}
                 />
@@ -92,7 +103,14 @@ export default function ModalPicker({
                     style={styles.option}
                     onPress={() => handleSelect(item.value)}
                   >
-                    <ThemedText style={styles.optionText}>
+                    <ThemedText
+                      style={[
+                        styles.optionText,
+                        {
+                          color,
+                        },
+                      ]}
+                    >
                       {item.label}
                     </ThemedText>
                     {item.value === selectedValue && (

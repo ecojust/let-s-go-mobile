@@ -171,7 +171,7 @@ export default function ProfileScreen() {
         </ThemedView>
 
         {/* 票价区间选择框 */}
-        <ThemedView style={styles.inputContainer}>
+        {/* <ThemedView style={styles.inputContainer}>
           <ThemedText style={styles.label}>票价区间</ThemedText>
           <ThemedView style={styles.priceRangeContainer}>
             <ThemedTextInput
@@ -194,7 +194,7 @@ export default function ProfileScreen() {
               onChangeText={(value) => setPriceMax(value)}
             />
           </ThemedView>
-        </ThemedView>
+        </ThemedView> */}
 
         {/* 日期选择框 */}
         <ThemedView style={styles.inputContainer}>
