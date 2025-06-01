@@ -353,7 +353,16 @@ export default class Plugin {
     // console.log("tickets", tickets);
 
     // return tickets;
-    return tickets.filter((ticket) => ticket.label.includes(seatType));
+    const afterFilter = tickets.filter((ticket) =>
+      ticket.label.includes(seatType)
+    );
+    if (afterFilter.length == 0) {
+      afterFilter.push({
+        text: "无余票",
+        label: "无余票",
+      });
+    }
+    return;
   }
 
   static async searchTickets(

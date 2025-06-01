@@ -79,7 +79,9 @@ export default function ProfileScreen() {
           setPriceMin(parsedData.priceMin || 0);
           setPriceMax(parsedData.priceMax || 350);
           setDate(
-            new Date(parsedData.date || new Date().getTime() + 1000 * 60 * 24)
+            new Date(
+              parsedData.date || new Date().getTime() + 1000 * 60 * 24 * 3
+            )
           ); // Parse date from YYYY-MM-DD format
         }
       } catch (error) {

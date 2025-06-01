@@ -309,17 +309,16 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {selectionData && (
-        <ThemedView style={styles.selectionContainer}>
-          <ThemedView style={styles.selectionRow}>
-            <ThemedText style={styles.selectionText}>
-              始发地: {selectionData.origin}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              目的地: {selectionData.destination}
-            </ThemedText>
-          </ThemedView>
-          {/* <ThemedView style={styles.selectionRow}>
+      <ThemedView style={styles.selectionContainer}>
+        <ThemedView style={styles.selectionRow}>
+          <ThemedText style={styles.selectionText}>
+            始发地: {selectionData?.origin}
+          </ThemedText>
+          <ThemedText style={styles.selectionText}>
+            目的地: {selectionData?.destination}
+          </ThemedText>
+        </ThemedView>
+        {/* <ThemedView style={styles.selectionRow}>
             <ThemedText style={styles.selectionText}>
               最低票价: ¥{selectionData.priceMin}
             </ThemedText>
@@ -327,21 +326,20 @@ export default function HomeScreen() {
               最高票价: ¥{selectionData.priceMax}
             </ThemedText>
           </ThemedView> */}
-          <ThemedView style={styles.selectionRow}>
-            <ThemedText style={styles.selectionText}>
-              座位: {selectionData.seatType}
-            </ThemedText>
-            <ThemedText style={styles.selectionText}>
-              日期: {selectionData.date}
-            </ThemedText>
-          </ThemedView>
-          {showInoutErrorRef.current && (
-            <ThemedText style={styles.error}>
-              请先至设置页面填写必要参数
-            </ThemedText>
-          )}
+        <ThemedView style={styles.selectionRow}>
+          <ThemedText style={styles.selectionText}>
+            座位: {selectionData?.seatType}
+          </ThemedText>
+          <ThemedText style={styles.selectionText}>
+            日期: {selectionData?.date}
+          </ThemedText>
         </ThemedView>
-      )}
+        {showInoutErrorRef.current && (
+          <ThemedText style={styles.error}>
+            请先至设置页面填写必要参数
+          </ThemedText>
+        )}
+      </ThemedView>
 
       {/* Search Button */}
       <ThemedButton
