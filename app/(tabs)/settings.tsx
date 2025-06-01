@@ -31,7 +31,7 @@ export default function ProfileScreen() {
   // 用户信息
   const productInfo = {
     nameZh: "上车，走吧",
-    nameEn: "Let's Go",
+    nameEn: "let-s-go",
     logo: require("@/assets/images/logo.png"), // 使用现有图片作为示例头像
     // 可以添加更多用户信息
   };
@@ -108,7 +108,7 @@ export default function ProfileScreen() {
             source={productInfo.logo}
             style={[
               styles.avatarImage,
-              colorScheme == "dark" ? styles.darkShadow : styles.lightShadow,
+              // colorScheme == "dark" ? styles.darkShadow : styles.lightShadow,
             ]}
           />
         </ThemedView>
@@ -231,6 +231,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#FFFFFF", // Add a white border for better visibility
     overflow: "hidden", // Ensure the image doesn't exceed the border
+    boxShadow: "0 0 6px 2px rgba(30, 134, 220, 0.3)",
   },
   darkShadow: {
     boxShadow: "0 0 6px 2px rgba(255,255,255,0.3)",

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "let‘s go",
-    "slug": "let‘s go",
+    "name": "let-s-go",
+    "slug": "let-s-go",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -76,7 +76,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "5d7542da-581c-4e34-ac1e-0b0fd143a15f"
+        "projectId": "f9d1a53e-1f31-4e03-8346-1be37fc45814"
       }
     }
   }
