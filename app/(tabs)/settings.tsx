@@ -21,10 +21,12 @@ import { ThemedTextInput } from "@/components/ThemedTextInput";
 
 import STATIONS from "../config/station_name";
 import { SITE_TYPE } from "../config/const";
-import { productName } from "expo-device";
+
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
 
   // 用户信息
   const productInfo = {
@@ -96,30 +98,19 @@ export default function ProfileScreen() {
   //   });
   // };
 
-  // 渲染设置选项
-  const renderSettingItem = (item: {
-    id: string;
-    title: string;
-    icon: string;
-  }) => (
-    <TouchableOpacity key={item.id} style={styles.settingItem}>
-      <ThemedText style={styles.settingText}>{item.title}</ThemedText>
-      <IconSymbol
-        name="chevron.right"
-        size={20}
-        color="#808080"
-        style={styles.arrowIcon}
-      />
-    </TouchableOpacity>
-  );
-
   return (
     <ParallaxScrollView
       headerHeight={180}
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
       headerImage={
         <ThemedView style={styles.headerImageContainer}>
-          <Image source={productInfo.logo} style={styles.avatarImage} />
+          <Image
+            source={productInfo.logo}
+            style={[
+              styles.avatarImage,
+              colorScheme == "dark" ? styles.darkShadow : styles.lightShadow,
+            ]}
+          />
         </ThemedView>
       }
     >
@@ -232,38 +223,38 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     paddingTop: 28,
-    backgroundColor: "rgba(255, 0, 221, 0.2)", // 内容区域背景色
   },
   avatarImage: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-    backgroundColor: "rgba(157, 255, 0, 0.2)", // 内容区域背景色
+    borderRadius: 4, // Ensure the image is circular
+    borderWidth: 2,
+    borderColor: "#FFFFFF", // Add a white border for better visibility
+    overflow: "hidden", // Ensure the image doesn't exceed the border
   },
+  darkShadow: {
+    boxShadow: "0 0 6px 2px rgba(255,255,255,0.3)",
+  },
+  lightShadow: {
+    boxShadow: "0 0 6px 2px rgba(0,0,0,0.3)",
+  },
+
   userInfoContainer: {
     alignItems: "center",
     paddingVertical: 20,
-    backgroundColor: "rgba(255, 0, 0, 0.2)", // 内容区域背景色
   },
   userName: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 5,
-    backgroundColor: "rgba(172, 14, 14, 0.2)", // 内容区域背景色
   },
   userDesc: {
     fontSize: 16,
     color: "#808080",
-
-    backgroundColor: "rgba(4, 255, 0, 0.2)", // 内容区域背景色
   },
   settingsContainer: {
     marginTop: 20,
     paddingHorizontal: 16,
-
-    backgroundColor: "rgba(47, 0, 255, 0.2)", // 内容区域背景色
   },
   sectionTitle: {
     fontSize: 18,
@@ -305,6 +296,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 8,
+    marginTop: Platform.OS === "ios" ? 0 : 8,
     textAlign: "center",
   },
   subTitle: {

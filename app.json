@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "let‘s go",
+    "slug": "let‘s go",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -18,9 +18,7 @@
       "bundleIdentifier": "com.juzisang.myapp",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": [
-          "remote-notification"
-        ]
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -57,9 +55,7 @@
           "icon": "./assets/images/adaptive.png",
           "color": "#ffffff",
           "defaultChannel": "default",
-          "sounds": [
-            "./assets/sounds/notification_sound.wav"
-          ],
+          "sounds": ["./assets/sounds/notification_sound.wav"],
           "enableBackgroundRemoteNotifications": true
         }
       ],
