@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -150,15 +150,16 @@ export default function HomeScreen() {
     processingQueueRef.current = false;
   };
 
-  const processStationQueue = async () => {
+  const processStationQueue = useCallback(async () => {
     setTask("searchTimeLine");
 
-    if (Plugin.stationQueue.length == 0) {
+    if (Plugin.stationQueue.length === 0) {
       console.log("找完了", stations);
+      return; // Exit early if no stations are left
     }
 
-    const station = Plugin.nextSationQueue(); // Get the next station from the queue
-    const url = station?.url!;
+    const station = Plugin.nextSationQueue();
+    const url = station?.url;
     if (!url) {
       console.log("这条没有地址，找不了哦，直接找下一条");
       processStationQueue();
@@ -173,17 +174,16 @@ export default function HomeScreen() {
 
     if (processingQueueRef.current) {
       console.log("正在查找,请稍等...", processingQueueRef.current);
-
       return;
     }
 
-    processingQueueRef.current = true; // Update the ref directly
+    processingQueueRef.current = true;
 
     setFetchUrl(url);
     setInjectScript(queryBodyScript);
     setStartFetch(true);
     console.log("剩余待找项目", Plugin.stationQueue.length);
-  };
+  }, [stations]);
 
   const handleContentFetched = async (html: string) => {
     switch (task) {
@@ -260,49 +260,52 @@ export default function HomeScreen() {
     }
   };
 
-  const tableColumns = [
-    {
-      key: "trainNo",
-      label: "车次",
-      width: 65,
-      useButton: true,
-      action: "more",
-    },
-    {
-      key: "departureTime",
-      label: "出发 ",
-      width: 45,
-    },
-    {
-      key: "arrivalTime",
-      label: "抵达 ",
-      width: 45,
-    },
-    {
-      key: "seatsStr",
-      label: "票价",
-      width: 60,
-    },
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: "trainNo",
+        label: "车次",
+        width: 65,
+        useButton: true,
+        action: "more",
+      },
+      {
+        key: "departureTime",
+        label: "出发 ",
+        width: 45,
+      },
+      {
+        key: "arrivalTime",
+        label: "抵达 ",
+        width: 45,
+      },
+      {
+        key: "seatsStr",
+        label: "票价",
+        width: 60,
+      },
 
-    {
-      key: "priceRate",
-      label: "Rank",
-      width: 50,
-      useRank: true,
-    },
-    {
-      key: "ticketsStr",
-      label: "余票",
-      width: 40,
-    },
-    {
-      key: "operation",
-      label: "操作",
-      // width: 80,
-      useButton: true,
-      action: "fetchAllTickets",
-    },
-  ];
+      {
+        key: "priceRate",
+        label: "Rank",
+        width: 50,
+        useRank: true,
+      },
+      {
+        key: "ticketsStr",
+        label: "余票",
+        width: 40,
+      },
+      {
+        key: "operation",
+        label: "操作",
+        // width: 80,
+        useButton: true,
+        action: "fetchAllTickets",
+      },
+    ],
+    []
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -433,7 +436,7 @@ export default function HomeScreen() {
               {selectionData?.date} | {dialogContent?.trainNo}站点信息
             </ThemedText>
             <ThemedText style={styles.dialogTitle3}>
-              当前页面打开后会自动开始查找，请不要关闭
+              当前页面打开后会自动开始查询，请不要关闭
             </ThemedText>
             {processingQueueRef.current && (
               <ThemedView>
@@ -442,12 +445,14 @@ export default function HomeScreen() {
                   size="large"
                   color="#4466ff"
                 />
-                <ThemedText>正在查找,请稍等...</ThemedText>
+                <ThemedText>正在查询,请稍等...</ThemedText>
               </ThemedView>
             )}
             <ThemedView style={styles.timeLine}>
               <FlatList
                 data={stations}
+                initialNumToRender={10} // Optimize FlatList rendering
+                windowSize={5} // Adjust window size for better performance
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
                   <ThemedView style={styles.stationItem}>
@@ -626,8 +631,9 @@ const styles = StyleSheet.create({
   stationItem: {
     fontSize: 16,
     marginBottom: 10,
+    padding: 5, // Added padding for better layout
   },
   stationItemTitle: {
-    fontWeight: 900,
+    fontWeight: "bold", // Changed to string for consistency
   },
 });
