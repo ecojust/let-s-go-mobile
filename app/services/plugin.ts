@@ -362,7 +362,7 @@ export default class Plugin {
         label: "无余票",
       });
     }
-    return;
+    return afterFilter;
   }
 
   static async searchTickets(

@@ -287,7 +287,7 @@ export default function HomeScreen() {
 
       {
         key: "priceRate",
-        label: "Rank",
+        label: "vs",
         width: 50,
         useRank: true,
       },
@@ -343,7 +343,7 @@ export default function HomeScreen() {
 
       {/* Search Button */}
       <ThemedButton
-        title="Search"
+        title="查询"
         onPress={handleSearch}
         style={styles.searchButton}
       />

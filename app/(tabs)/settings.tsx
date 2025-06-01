@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 8,
-    marginTop: Platform.OS === "ios" ? 0 : 8,
+    paddingTop: Platform.OS === "ios" ? 0 : 8,
     textAlign: "center",
   },
   subTitle: {
