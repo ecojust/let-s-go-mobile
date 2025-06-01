@@ -1,4 +1,4 @@
-export const queryDayListScript = `
+export const queryBodyScript = `
 setTimeout(()=>{
    const res = document.querySelector('body').innerHTML;
     window.ReactNativeWebView.postMessage(res);
@@ -6,10 +6,10 @@ setTimeout(()=>{
 true;
 `;
 
-export const queryStationScript = `
+export const queryTimeLineScript = `
 setTimeout(()=>{
    const res = document.querySelector('body').innerHTML;
     window.ReactNativeWebView.postMessage(res);
-},3000)
+},2000)
 true;
 `;

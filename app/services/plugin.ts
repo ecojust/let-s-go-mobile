@@ -15,11 +15,25 @@ export default class Plugin {
   static priceMax: number;
   static priceMin: number;
   static seatType: string;
+  static stationQueue: Array<[]>;
+  static processingSationName: string;
 
   static setConfig(priceMin: number, priceMax: number, seatType: string) {
     this.priceMin = priceMin;
     this.priceMax = priceMax;
     this.seatType = seatType;
+  }
+
+  static setStationQueue(stationQueue: Array<any>) {
+    this.stationQueue = stationQueue;
+  }
+
+  static nextSationQueue() {
+    return this.stationQueue.shift() as any;
+  }
+
+  static setProcessingSationName(name: string) {
+    this.processingSationName = name;
   }
 
   static decodePrice(type1Code: string, type2Code: string) {
@@ -294,6 +308,52 @@ export default class Plugin {
     const response = $("pre").eq(0).text();
     const json = JSON.parse(response);
     return json?.data?.data || [];
+  }
+
+  static parsePointTickets(html: string, trainNo: string, seatType: string) {
+    console.log("开始找符合条件的1：", trainNo, seatType);
+    // console.log("开始找符合条件的2：", html);
+
+    // 解析json
+    const $ = cheerio.load(html);
+    let tickets: Array<any> = [];
+
+    $("tr")
+      .get()
+      .forEach((el: any) => {
+        const no = $(el).find(".number").text(); //车次
+        if (no === trainNo) {
+          const num_ticket = $(el).find(".t-num"); //  一等座 二等座 软卧 硬卧 硬座 无座
+          const yes_ticket = $(el).find(".yes"); //  一等座 二等座 软卧 硬卧 硬座 无座
+          tickets = tickets.concat(
+            num_ticket
+              //@ts-ignore
+              .map((i, el) => {
+                return {
+                  text: $(el).text(),
+                  label: $(el).attr("aria-label")?.toString(),
+                };
+              })
+              .get()
+          );
+          tickets = tickets.concat(
+            yes_ticket
+              //@ts-ignore
+              .map((i, el) => {
+                return {
+                  text: $(el).text(),
+                  label: $(el).attr("aria-label")?.toString(),
+                };
+              })
+              .get()
+          );
+        }
+      });
+
+    // console.log("tickets", tickets);
+
+    // return tickets;
+    return tickets.filter((ticket) => ticket.label.includes(seatType));
   }
 
   static async searchTickets(

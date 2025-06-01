@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -24,13 +24,18 @@ import { ThemedButton } from "@/components/ThemedButton";
 
 import { WebViewFetcher } from "../services/webviewFetcher";
 
-import { queryDayListScript, queryStationScript } from "../config/script";
+import { queryBodyScript } from "../config/script";
+
+import Plugin from "../services/plugin";
 
 import {
   parseList,
   generateSearchTrainsUrl,
   generateStationUrl,
   parseStations,
+  generateStationTicketUrls,
+  waitTrue,
+  parseStationPoint,
 } from "../services";
 
 export default function HomeScreen() {
@@ -56,6 +61,9 @@ export default function HomeScreen() {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [dialogContent, setDialogContent] = useState<any>(null);
   const isFocused = useIsFocused();
+
+  // const [stationQueue, setStationQueue] = useState<any[]>([]); // Queue for station URLs
+  // const [processingQueue, setProcessingQueue] = useState(false); // State to track queue processing
 
   const fetchSelectionData = async () => {
     try {
@@ -88,18 +96,93 @@ export default function HomeScreen() {
 
     restoreSelectionData();
   }, []);
+  const showInoutErrorRef = useRef(false); // Use useRef for immediate updates
 
   const handleSearch = async () => {
     setLoading(true); // Show loading indicator
     setTableData([]);
+    if (
+      !selectionData ||
+      !selectionData.origin ||
+      !selectionData.destination ||
+      !selectionData.seatType ||
+      !selectionData.date
+    ) {
+      showInoutErrorRef.current = true;
+      setTimeout(() => {
+        showInoutErrorRef.current = false;
+      }, 3000);
+
+      return "";
+    }
     const url = generateSearchTrainsUrl(selectionData!);
-    console.log("generateSearchTrainsUrl", url);
     if (url) {
       setTask("searchList");
       setFetchUrl(url);
-      setInjectScript(queryDayListScript);
+      setInjectScript(queryBodyScript);
       setStartFetch(true);
     }
+  };
+
+  const storeTicket = async (html: string) => {
+    // Update station data after processing
+    const tickets = await parseStationPoint(
+      html,
+      dialogContent.trainNo!,
+      selectionData?.seatType!
+    );
+    const temp = JSON.parse(JSON.stringify(stations));
+    const needUpdate = temp.find(
+      (s: any) => s.station_name === Plugin.processingSationName
+    );
+    if (needUpdate) {
+      needUpdate.tickets = tickets;
+      // console.log("数据已更新", needUpdate);
+    }
+    setStations(temp);
+  };
+
+  const processingQueueRef = useRef(false); // Use useRef for immediate updates
+
+  const closeStationDialog = () => {
+    setStationsDialogVisible(false);
+    Plugin.setStationQueue([]);
+    processingQueueRef.current = false;
+  };
+
+  const processStationQueue = async () => {
+    setTask("searchTimeLine");
+
+    if (Plugin.stationQueue.length == 0) {
+      console.log("找完了", stations);
+    }
+
+    const station = Plugin.nextSationQueue(); // Get the next station from the queue
+    const url = station?.url!;
+    if (!url) {
+      console.log("这条没有地址，找不了哦，直接找下一条");
+      processStationQueue();
+      return;
+    }
+
+    Plugin.setProcessingSationName(station.station_name);
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, Math.random() * 5000 + 3000);
+    });
+
+    if (processingQueueRef.current) {
+      console.log("正在查找,请稍等...", processingQueueRef.current);
+
+      return;
+    }
+
+    processingQueueRef.current = true; // Update the ref directly
+
+    setFetchUrl(url);
+    setInjectScript(queryBodyScript);
+    setStartFetch(true);
+    console.log("剩余待找项目", Plugin.stationQueue.length);
   };
 
   const handleContentFetched = async (html: string) => {
@@ -120,30 +203,31 @@ export default function HomeScreen() {
         setStartFetch(false);
         setLoading(false); // Hide loading indicator
 
-        setTimeout(() => {
-          setTask("searchTimeLine");
+        Plugin.setStationQueue(
+          generateStationTicketUrls(
+            fetchedStations,
+            selectionData!.origin,
+            selectionData!.date
+          )
+        );
 
-          // await Plugin.searchTickets(
-          //   currentTrain.value.trainNo,
-          //   stations.value,
-          //   form.from,
-          //   form.date,
-          //   (data) => {
-          //     tickets.value[data.to] = {
-          //       message: `车次【${data.trainNo}】从${data.from}到${data.to}的余票查询结束`,
-          //       tickets: data.tickets,
-          //     };
-          //   }
-          // );
-        }, 1000);
+        processStationQueue();
+
         break;
+
       case "searchTimeLine":
+        // setContent(html);
+        setStartFetch(false);
+        processingQueueRef.current = false; // Reset the ref directly
+        console.log("找到了,重置processing状态为false");
+        await storeTicket(html);
+        processStationQueue();
+
         break;
     }
   };
 
   const handleItemClick = async (row: any, action: string) => {
-    console.log(action, row);
     setDialogContent(row);
     switch (action) {
       case "more":
@@ -164,14 +248,13 @@ export default function HomeScreen() {
           selectionData?.date!
         );
         setTask("searchStation");
-
+        setLoading(true);
         console.log("generateStationUrl", url);
         setFetchUrl(
           url
           // "https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=5l0000G104B2&from_station_telecode=AOH&to_station_telecode=TIP&depart_date=2025-06-03"
-          // https://kyfw.12306.cn/otn/czxx/queryByTrainNo?train_no=5l0000G104B2&from_station_telecode=AOH&to_station_telecode=TIP&depart_date=2025年6月1日
         );
-        setInjectScript(queryStationScript);
+        setInjectScript(queryBodyScript);
         setStartFetch(true);
         break;
     }
@@ -233,7 +316,6 @@ export default function HomeScreen() {
               目的地: {selectionData.destination}
             </ThemedText>
           </ThemedView>
-
           {/* <ThemedView style={styles.selectionRow}>
             <ThemedText style={styles.selectionText}>
               最低票价: ¥{selectionData.priceMin}
@@ -242,7 +324,6 @@ export default function HomeScreen() {
               最高票价: ¥{selectionData.priceMax}
             </ThemedText>
           </ThemedView> */}
-
           <ThemedView style={styles.selectionRow}>
             <ThemedText style={styles.selectionText}>
               座位: {selectionData.seatType}
@@ -251,6 +332,11 @@ export default function HomeScreen() {
               日期: {selectionData.date}
             </ThemedText>
           </ThemedView>
+          {showInoutErrorRef.current && (
+            <ThemedText style={styles.error}>
+              请先至设置页面填写必要参数
+            </ThemedText>
+          )}
         </ThemedView>
       )}
 
@@ -262,8 +348,12 @@ export default function HomeScreen() {
       />
 
       {loading && (
-        <ThemedView>
-          <ActivityIndicator size="large" color="#4466ff" />
+        <ThemedView style={{ marginTop: 10 }}>
+          <ActivityIndicator
+            style={{ marginTop: 10 }}
+            size="large"
+            color="#4466ff"
+          />
         </ThemedView>
       )}
 
@@ -271,7 +361,7 @@ export default function HomeScreen() {
       {startFetch && (
         <WebViewFetcher
           injectedScript={injectScript}
-          height={100}
+          height={0}
           url={fetchUrl}
           onContentFetched={handleContentFetched}
         />
@@ -340,23 +430,46 @@ export default function HomeScreen() {
         <ThemedView style={styles.stationsDialogContainer}>
           <ThemedView style={styles.timeLineContent}>
             <ThemedText style={styles.dialogTitle2}>
-              {selectionData?.date}|{dialogContent?.trainNo}车站信息
+              {selectionData?.date} | {dialogContent?.trainNo}站点信息
             </ThemedText>
-
+            <ThemedText style={styles.dialogTitle3}>
+              当前页面打开后会自动开始查找，请不要关闭
+            </ThemedText>
+            {processingQueueRef.current && (
+              <ThemedView>
+                <ActivityIndicator
+                  style={{ marginTop: 0 }}
+                  size="large"
+                  color="#4466ff"
+                />
+                <ThemedText>正在查找,请稍等...</ThemedText>
+              </ThemedView>
+            )}
             <ThemedView style={styles.timeLine}>
               <FlatList
                 data={stations}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
-                  <ThemedText style={styles.stationItem}>
-                    {item.station_name} ({item.arrive_time} - {item.start_time})
-                  </ThemedText>
+                  <ThemedView style={styles.stationItem}>
+                    <ThemedText style={styles.stationItemTitle}>
+                      {item.station_name} ({item.arrive_time} -{" "}
+                      {item.start_time})
+                    </ThemedText>
+                    {item.tickets &&
+                      Array.isArray(item.tickets) &&
+                      item.tickets.map((ticket: any) => (
+                        <ThemedText key={item.station_name + ticket.label}>
+                          {item.searchFrom}到{item.searchTo}：{ticket.label}
+                        </ThemedText>
+                      ))}
+                  </ThemedView>
                 )}
               />
             </ThemedView>
-            <Button
+            <ThemedButton
+              style={{ width: 200, marginTop: 10 }}
               title="关闭"
-              onPress={() => setStationsDialogVisible(false)}
+              onPress={closeStationDialog}
             />
           </ThemedView>
         </ThemedView>
@@ -465,13 +578,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff0000",
     alignItems: "center",
   },
+  error: {
+    fontSize: 12,
+    marginBottom: 2,
+    color: "red",
+    alignItems: "center",
+    // backgroundColor: "#fff000",
+    textAlign: "center", // Ensure title remains centered
+  },
   dialogTitle2: {
-    fontSize: 18,
+    fontSize: 20,
     alignItems: "center",
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 2,
+    // backgroundColor: "#fff000",
+    textAlign: "center", // Ensure title remains centered
+  },
+
+  dialogTitle3: {
+    fontSize: 12,
+    marginBottom: 2,
     color: "red",
-    backgroundColor: "#fff000",
+    alignItems: "center",
+    // backgroundColor: "#fff000",
+    textAlign: "center", // Ensure title remains centered
   },
   dialogText2: {
     fontSize: 16,
@@ -483,21 +613,21 @@ const styles = StyleSheet.create({
     height: "80%",
     padding: 10,
     borderRadius: 10,
-    backgroundColor: "#fff000",
-    alignItems: "center",
+    alignItems: "center", // Keep content centered
   },
   timeLine: {
     flex: 1,
-    alignItems: "flex-start",
-    // backgroundColor: "transparent",
-    backgroundColor: "red",
-    width: 400,
-
+    alignSelf: "stretch", // Ensure content inside is left-aligned
+    backgroundColor: "transparent",
+    width: "100%", // Adjust width to fit the container
     height: "80%",
   },
 
   stationItem: {
     fontSize: 16,
     marginBottom: 10,
+  },
+  stationItemTitle: {
+    fontWeight: 900,
   },
 });

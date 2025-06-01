@@ -24,8 +24,8 @@ export const generateSearchTrainsUrl = (params: {
   return url;
 };
 
-export const parseList = async (url: string) => {
-  const arr = await Plugin.parseDayLeftTicket(url);
+export const parseList = async (html: string) => {
+  const arr = await Plugin.parseDayLeftTicket(html);
   return arr;
 };
 
@@ -41,5 +41,55 @@ export const generateStationUrl = (
 
 export const parseStations = async (html: string) => {
   const arr = await Plugin.getStations(html);
+  return arr;
+};
+
+export const generateStationTicketUrls = (
+  stations: Array<any>,
+  origin: string,
+  date: string
+) => {
+  const originData = [...stations];
+  const fromCode = STATIONS.find((item) => item.name === origin)?.code;
+  let startIndex = originData.findIndex((item: any) => {
+    return item.station_name === origin;
+  });
+  if (startIndex === -1) {
+    startIndex = 0;
+  }
+  let url = ``;
+
+  for (let i = startIndex + 1; i < originData.length; i++) {
+    const item = originData[i];
+    const to = item.station_name;
+    const toCode = STATIONS.find((item) => item.name === to)?.code;
+    url = `https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=${origin},${fromCode}&ts=${to},${toCode}&date=${date}&flag=N,N,Y`;
+    item.url = url;
+    item.searchFrom = origin;
+    item.searchTo = to;
+  }
+
+  return originData;
+};
+
+export const waitTrue = (action: Function, delay: number = 200) => {
+  return new Promise((resolve, reject) => {
+    let timer = setInterval(() => {
+      const isTrue = action();
+      console.log("waitTrue", isTrue);
+      if (isTrue) {
+        clearInterval(timer);
+        resolve(true);
+      }
+    }, delay);
+  });
+};
+
+export const parseStationPoint = async (
+  html: string,
+  trainNo: string,
+  seatType: string
+) => {
+  const arr = Plugin.parsePointTickets(html, trainNo, seatType);
   return arr;
 };
