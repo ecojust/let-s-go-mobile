@@ -251,7 +251,7 @@ export default class Plugin {
         }
 
         const afterTicketFilter = tickets.filter((res) =>
-          res.label.includes(this.seatType)
+          res.label?.includes(this.seatType)
         );
 
         const ticketsStr = afterTicketFilter.map((ticket) => `${ticket.text}`);
@@ -354,7 +354,7 @@ export default class Plugin {
 
     // return tickets;
     const afterFilter = tickets.filter((ticket) =>
-      ticket.label.includes(seatType)
+      ticket.label?.includes(seatType)
     );
     if (afterFilter.length == 0) {
       afterFilter.push({

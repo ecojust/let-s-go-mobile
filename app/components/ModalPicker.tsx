@@ -45,7 +45,7 @@ export default function ModalPicker({
   const color = useThemeColor({ light: "black", dark: "black" }, "text");
 
   const filteredOptions = options.filter((option) =>
-    option.label.includes(filterText)
+    option.label?.includes(filterText)
   );
 
   const handleSelect = (value: string) => {
