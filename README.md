@@ -12,6 +12,6 @@
 <img src="./preview/settings.png" width="90%" style="margin:10px 5%" alt="首页" />
 <img src="./preview/search.png" width="90%" style="margin:10px 5%" alt="车票类型筛选" />
 
-## 🖼️ 安卓真机
+## 📱 安卓真机
 
 <img src="./preview/android.png" width="90%" style="margin:10px 5%" alt="车次余票搜索" />
